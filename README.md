@@ -4,12 +4,12 @@ This is an implementation of the **Double Buffer** design pattern from 'Game Pro
 
 In a simulation, you often have to do a lot of processing to prepare the next "frame", but if you're
 iterating through the current-state data while mutating it, things can slip.  The Double Buffer design
-pattern solves this by keepint two copies of the simuilation state (or any variable): the "current"
+pattern solves this by keeping two copies of the simulation state (or any variable): the "current"
 (or previous) state which is immutable, and the "next" (or future) state which is being prepared.  When
 a turn of the simulation is completed, you simply switch the buffers.
 
 Unlike other implementations on crates.io, this one wraps both buffers in `std::cell::RefCell` so that
-it is possible to borrow one buffer as mutable at the same time the other is borrows as immutable --
+it is possible to borrow one buffer as mutable at the same time the other is borrowed as immutable --
 a typical use case is to iterate over objects in the world (current state) and write updated versions of 
 them to the next state.
 
