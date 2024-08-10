@@ -45,6 +45,14 @@ impl<T> DoubleBuffer<T> {
         }
     }
 
+    /// Get an immutable reference to the next-state buffer.
+    pub fn next_immut(&self) -> Ref<T> {
+        match self.switched {
+            false => self.second.borrow(),
+            true => self.first.borrow(),
+        }
+    }
+
     /// Switch the "current" and "next" buffers.
     pub fn switch(&mut self) {
         self.switched = !self.switched;
