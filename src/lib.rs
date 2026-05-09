@@ -30,7 +30,7 @@ impl<T> DoubleBuffer<T> {
     }
 
     /// Get an immutable reference to the current-state buffer.
-    pub fn current(&self) -> Ref<T> {
+    pub fn current(&self) -> Ref<'_, T> {
         match self.switched {
             false => self.first.borrow(),
             true => self.second.borrow(),
@@ -38,7 +38,7 @@ impl<T> DoubleBuffer<T> {
     }
 
     /// Get a mutable reference to the next-state buffer.
-    pub fn next(&self) -> RefMut<T> {
+    pub fn next(&self) -> RefMut<'_, T> {
         match self.switched {
             false => self.second.borrow_mut(),
             true => self.first.borrow_mut(),
@@ -46,7 +46,7 @@ impl<T> DoubleBuffer<T> {
     }
 
     /// Get an immutable reference to the next-state buffer.
-    pub fn next_immut(&self) -> Ref<T> {
+    pub fn next_immut(&self) -> Ref<'_, T> {
         match self.switched {
             false => self.second.borrow(),
             true => self.first.borrow(),
@@ -57,9 +57,17 @@ impl<T> DoubleBuffer<T> {
     pub fn switch(&mut self) {
         self.switched = !self.switched;
     }
-
 }
 
+impl<T: Clone> Clone for DoubleBuffer<T> {
+    fn clone(&self) -> Self {
+        Self {
+            first: self.first.clone(),
+            second: self.second.clone(),
+            switched: self.switched,
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -96,4 +104,34 @@ mod tests {
      }
 
 
+     #[test]
+    fn cloning_instance() {
+        let my_double_buf: DoubleBuffer<Vec<i32>> = DoubleBuffer::new(vec![2, 4, 6], Vec::new());
+        for number in my_double_buf.current().iter() {
+            my_double_buf.next().push(*number + 1);
+        }
+
+        let mut my_clone_buf = my_double_buf.clone();
+        my_clone_buf.switch();
+        assert_eq!(*my_clone_buf.current(), vec!(3, 5, 7));
+        *my_clone_buf.next() = Vec::new();
+        for number in my_clone_buf.current().iter() {
+            my_clone_buf.next().push(*number + 1);
+        }
+
+        assert_eq!(*my_double_buf.current(), vec!(2, 4, 6));
+    }
+
+
+    #[test]
+    fn clone_from_elem() {
+        let my_many_double_buf = vec![DoubleBuffer::new(vec![2, 4, 6], Vec::new()); 2];
+        for mut my_double_buf in my_many_double_buf {
+            for number in my_double_buf.current().iter() {
+                my_double_buf.next().push(*number + 1);
+            }
+            my_double_buf.switch();
+            assert_eq!(*my_double_buf.current(), vec!(3, 5, 7));
+        }
+    }
 }
